@@ -1,5 +1,8 @@
 # Pattern matching for detecting secrets
 regex>=2023.0.0
 
+# Git repository interaction for history scanning
+gitpython>=3.1.40
+
 # Testing framework
 pytest>=8.0.0
