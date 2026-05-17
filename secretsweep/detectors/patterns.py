@@ -79,4 +79,39 @@ PATTERNS = [
         "pattern": r"(?i)ENV\s+(PASSWORD|SECRET|API_KEY|TOKEN|DATABASE_URL)\s*[=\s]\s*\S{6,}",
         "severity": "high",
     },
+    {
+        "name": "Shopify Access Token",
+        "pattern": r"shp(at|ca|ss)_[A-Za-z0-9]{32}",
+        "severity": "critical",
+    },
+    {
+        "name": "NPM Auth Token",
+        "pattern": r"npm_[A-Za-z0-9]{36}",
+        "severity": "critical",
+    },
+    {
+        "name": "HashiCorp Vault Token",
+        "pattern": r"hvs\.[A-Za-z0-9_-]{90,}",
+        "severity": "critical",
+    },
+    {
+        "name": "Cloudflare API Token",
+        "pattern": r"(?i)(cloudflare|cf)[-_]?(api[-_]?)?token\s*[=:]\s*['\"]?[A-Za-z0-9_-]{35,45}['\"]?",
+        "severity": "critical",
+    },
+    {
+        "name": "Discord Bot Token",
+        "pattern": r"[MNO][A-Za-z0-9_-]{23}\.[A-Za-z0-9_-]{6}\.[A-Za-z0-9_-]{27,}",
+        "severity": "critical",
+    },
+    {
+        "name": "Ethereum Private Key",
+        "pattern": r"(?i)(private.?key|eth.?key|wallet.?key)\s*[=:]\s*['\"]?0x[a-fA-F0-9]{64}['\"]?",
+        "severity": "critical",
+    },
+    {
+        "name": "PGP Private Key",
+        "pattern": r"-----BEGIN PGP PRIVATE KEY BLOCK-----",
+        "severity": "critical",
+    },
 ]

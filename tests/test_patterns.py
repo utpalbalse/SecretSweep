@@ -78,3 +78,37 @@ def test_azure_sas_token_detected():
 def test_dockerfile_secret_detected():
     pattern = get_pattern("Dockerfile Secret")
     assert regex.search(pattern, "ENV DATABASE_URL=postgres://user:pass@host/db") is not None
+
+def test_shopify_access_token_detected():
+    pattern = get_pattern("Shopify Access Token")
+    assert regex.search(pattern, "shpat_aBcDeFgHiJkLmNoPqRsTuVwXyZ123456") is not None
+
+def test_shopify_custom_app_token_detected():
+    pattern = get_pattern("Shopify Access Token")
+    assert regex.search(pattern, "shpca_aBcDeFgHiJkLmNoPqRsTuVwXyZ123456") is not None
+
+def test_npm_auth_token_detected():
+    pattern = get_pattern("NPM Auth Token")
+    assert regex.search(pattern, "npm_aBcDeFgHiJkLmNoPqRsTuVwXyZ1234567890") is not None
+
+def test_hashicorp_vault_token_detected():
+    pattern = get_pattern("HashiCorp Vault Token")
+    vault_token = "hvs." + "A" * 90
+    assert regex.search(pattern, vault_token) is not None
+
+def test_cloudflare_api_token_detected():
+    pattern = get_pattern("Cloudflare API Token")
+    assert regex.search(pattern, "CLOUDFLARE_TOKEN=aBcDeFgHiJkLmNoPqRsTuVwXyZ1234567890abcd") is not None
+
+def test_discord_bot_token_detected():
+    pattern = get_pattern("Discord Bot Token")
+    assert regex.search(pattern, "MTIzNDU2Nzg5MDEyMzQ1NjcA.ABcdef.ABcDeFgHiJkLmNoPqRsTuVwXyZ12") is not None
+
+def test_ethereum_private_key_detected():
+    pattern = get_pattern("Ethereum Private Key")
+    eth_key = "private_key=0x" + "a1b2c3d4" * 8
+    assert regex.search(pattern, eth_key) is not None
+
+def test_pgp_private_key_detected():
+    pattern = get_pattern("PGP Private Key")
+    assert regex.search(pattern, "-----BEGIN PGP PRIVATE KEY BLOCK-----") is not None
