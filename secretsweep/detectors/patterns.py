@@ -54,4 +54,29 @@ PATTERNS = [
         "pattern": r"xox[baprs]-[A-Za-z0-9\-]{10,}",
         "severity": "high",
     },
+    {
+        "name": "CI/CD Hardcoded Secret",
+        "pattern": r"(?i)(password|secret|token|api_key)\s*:\s*(?!\$)['\"]?[A-Za-z0-9_\-+=]{10,}['\"]?",
+        "severity": "high",
+    },
+    {
+        "name": "GCP Service Account",
+        "pattern": r'"type"\s*:\s*"service_account"',
+        "severity": "critical",
+    },
+    {
+        "name": "Azure Storage Connection String",
+        "pattern": r"DefaultEndpointsProtocol=https?;AccountName=\w+;AccountKey=[A-Za-z0-9+/=]{20,}",
+        "severity": "critical",
+    },
+    {
+        "name": "Azure SAS Token",
+        "pattern": r"sv=\d{4}-\d{2}-\d{2}.*?sig=[A-Za-z0-9%+/=]{20,}",
+        "severity": "high",
+    },
+    {
+        "name": "Dockerfile Secret",
+        "pattern": r"(?i)ENV\s+(PASSWORD|SECRET|API_KEY|TOKEN|DATABASE_URL)\s*[=\s]\s*\S{6,}",
+        "severity": "high",
+    },
 ]

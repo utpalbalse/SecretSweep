@@ -54,3 +54,27 @@ def test_hardcoded_password_detected():
 def test_slack_token_detected():
     pattern = get_pattern("Slack Token")
     assert regex.search(pattern, "xoxb-123456789-abcdefghij") is not None
+
+def test_cicd_hardcoded_secret_detected():
+    pattern = get_pattern("CI/CD Hardcoded Secret")
+    assert regex.search(pattern, "password: mysecretvalue123") is not None
+
+def test_cicd_hardcoded_secret_skips_template():
+    pattern = get_pattern("CI/CD Hardcoded Secret")
+    assert regex.search(pattern, "password: ${{ secrets.MY_PASSWORD }}") is None
+
+def test_gcp_service_account_detected():
+    pattern = get_pattern("GCP Service Account")
+    assert regex.search(pattern, '"type": "service_account"') is not None
+
+def test_azure_storage_connection_string_detected():
+    pattern = get_pattern("Azure Storage Connection String")
+    assert regex.search(pattern, "DefaultEndpointsProtocol=https;AccountName=myaccount;AccountKey=abc123def456ghi789jkl012mno345pqr678==") is not None
+
+def test_azure_sas_token_detected():
+    pattern = get_pattern("Azure SAS Token")
+    assert regex.search(pattern, "sv=2021-06-08&se=2023-01-01T00:00:00Z&sig=abcDEFghiJKLmnoPQRstuvwxyz1234567890ABCD==") is not None
+
+def test_dockerfile_secret_detected():
+    pattern = get_pattern("Dockerfile Secret")
+    assert regex.search(pattern, "ENV DATABASE_URL=postgres://user:pass@host/db") is not None
