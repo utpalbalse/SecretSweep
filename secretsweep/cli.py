@@ -7,6 +7,7 @@ from secretsweep.core.git_scanner import scan_git_history
 from secretsweep.core.ignorer import Ignorer
 from secretsweep.core.config import load_config
 from secretsweep.core.baseline import filter_new_findings, write_baseline
+from secretsweep.core.deduplicator import deduplicate
 from secretsweep.reporters.console import print_findings
 from secretsweep.reporters.json_reporter import write_json
 from secretsweep.reporters.sarif_reporter import write_sarif
@@ -62,6 +63,8 @@ def main():
     if args.history:
         print(f"Scanning git history in {args.path} ...", file=sys.stderr)
         findings += scan_git_history(args.path, depth=args.depth)
+
+    findings = deduplicate(findings)
 
     if args.baseline:
         findings = filter_new_findings(findings, args.baseline)

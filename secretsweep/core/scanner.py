@@ -1,9 +1,33 @@
+import fnmatch
 import os
 import regex
 from secretsweep.detectors.patterns import PATTERNS
 
 _ARCHIVE_EXTS = {'.zip', '.tar', '.gz', '.tgz', '.bz2'}
 _YAML_EXTS = {'.yaml', '.yml'}
+
+DEFAULT_SKIP_DIRS = {
+    '.git', '__pycache__', 'node_modules', 'venv', '.venv', 'env',
+    'dist', 'build', 'target', '.pytest_cache', '.tox', 'vendor',
+    'bower_components', '.idea', '.vscode', 'site-packages',
+    '.mypy_cache', '.ruff_cache', 'htmlcov', '.eggs',
+}
+
+_SKIP_DIR_PATTERNS = ['*.egg-info', '*.dist-info']
+
+
+def _should_skip_dir(dirname):
+    if dirname in DEFAULT_SKIP_DIRS:
+        return True
+    return any(fnmatch.fnmatch(dirname, p) for p in _SKIP_DIR_PATTERNS)
+
+
+def _is_binary(filepath):
+    try:
+        with open(filepath, 'rb') as f:
+            return b'\x00' in f.read(8192)
+    except Exception:
+        return True
 
 
 def scan_file_content(content, filepath):
@@ -24,6 +48,8 @@ def scan_file_content(content, filepath):
 
 def scan_file(filepath, entropy=False, config=None):
     findings = []
+    if _is_binary(filepath):
+        return findings
     try:
         with open(filepath, 'r', encoding='utf-8', errors='ignore') as f:
             content = f.read()
@@ -52,8 +78,11 @@ def scan_directory(
     all_findings = []
 
     for root, dirs, files in os.walk(path):
-        if ignorer:
-            dirs[:] = [d for d in dirs if not ignorer.is_ignored(os.path.join(root, d))]
+        dirs[:] = [
+            d for d in dirs
+            if not _should_skip_dir(d)
+            and (not ignorer or not ignorer.is_ignored(os.path.join(root, d)))
+        ]
 
         for filename in files:
             filepath = os.path.join(root, filename)
