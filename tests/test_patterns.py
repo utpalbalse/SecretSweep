@@ -112,3 +112,62 @@ def test_ethereum_private_key_detected():
 def test_pgp_private_key_detected():
     pattern = get_pattern("PGP Private Key")
     assert regex.search(pattern, "-----BEGIN PGP PRIVATE KEY BLOCK-----") is not None
+
+def test_dsa_private_key_detected():
+    pattern = get_pattern("Private Key Header")
+    assert regex.search(pattern, "-----BEGIN DSA PRIVATE KEY-----") is not None
+
+def test_aws_sts_token_detected():
+    pattern = get_pattern("AWS STS Session Token")
+    assert regex.search(pattern, "ASIAIOSFODNN7EXAMPLE") is not None
+
+def test_gitlab_pat_detected():
+    pattern = get_pattern("GitLab PAT")
+    assert regex.search(pattern, "glpat-aBcDeFgHiJkLmNoPqRsT") is not None
+
+def test_twilio_api_key_detected():
+    pattern = get_pattern("Twilio API Key")
+    assert regex.search(pattern, "SKabcdef1234567890abcdef1234567890ab") is not None
+
+def test_sendgrid_api_key_detected():
+    pattern = get_pattern("SendGrid API Key")
+    assert regex.search(pattern, "SG.aBcDeFgHiJkLmNoPqRsTuV.wXyZ1234567890aBcDeFgHiJkLmNoPqRsTuVwXyZ1234567890a") is not None
+
+def test_huggingface_token_detected():
+    pattern = get_pattern("HuggingFace Token")
+    assert regex.search(pattern, "hf_aBcDeFgHiJkLmNoPqRsTuVwXyZ12345678") is not None
+
+def test_openai_api_key_detected():
+    pattern = get_pattern("OpenAI API Key")
+    assert regex.search(pattern, "sk-aBcDeFgHiJkLmNoPqRsTuVwXyZ1234567890abcdefgh") is not None
+
+def test_datadog_api_key_detected():
+    pattern = get_pattern("Datadog API Key")
+    assert regex.search(pattern, "DD_API_KEY=abcdef1234567890abcdef1234567890") is not None
+
+def test_sentry_dsn_detected():
+    pattern = get_pattern("Sentry DSN")
+    assert regex.search(pattern, "https://abcdef1234567890abcdef1234567890@o123456.ingest.sentry.io/789") is not None
+
+def test_facebook_token_detected():
+    pattern = get_pattern("Facebook Access Token")
+    assert regex.search(pattern, "EAAGaBcDeFgHiJkLmNoPqRsTuVwXyZ1234567890") is not None
+
+def test_bearer_token_detected():
+    pattern = get_pattern("Bearer Token")
+    assert regex.search(pattern, "Authorization: bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9") is not None
+
+def test_mailchimp_api_key_detected():
+    pattern = get_pattern("Mailchimp API Key")
+    # Split to avoid GitHub push protection flagging this file
+    fake_key = "abcdef1234567890abcdef1234567890" + "-us12"
+    assert regex.search(pattern, fake_key) is not None
+
+def test_terraform_cloud_token_detected():
+    pattern = get_pattern("Terraform Cloud Token")
+    fake_token = "abcdefghijklmn.atlasv1." + "A" * 60
+    assert regex.search(pattern, fake_token) is not None
+
+def test_gcp_oauth_token_detected():
+    pattern = get_pattern("GCP OAuth Token")
+    assert regex.search(pattern, "ya29." + "A" * 50) is not None

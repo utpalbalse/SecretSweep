@@ -1,0 +1,7 @@
+- id: secretsweep
+  name: SecretSweep
+  description: Scan for secrets and credentials in your codebase
+  entry: secretsweep
+  language: python
+  pass_filenames: false
+  args: ['.']
