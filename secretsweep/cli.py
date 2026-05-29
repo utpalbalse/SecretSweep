@@ -27,6 +27,7 @@ def main():
     scan_group.add_argument("--archives", action="store_true", help="Scan inside .zip and .tar archives")
     scan_group.add_argument("--k8s", action="store_true", help="Decode and scan Kubernetes Secret YAML files")
     scan_group.add_argument("--tf-state", action="store_true", dest="tf_state", help="Scan Terraform state files")
+    scan_group.add_argument("--workers", type=int, default=None, help="Number of parallel worker threads (default: auto)")
 
     output_group = parser.add_argument_group("output options")
     output_group.add_argument("--json", action="store_true", dest="json_output", help="Output findings as JSON")
@@ -58,6 +59,7 @@ def main():
         k8s=args.k8s,
         tf_state=args.tf_state,
         config=config,
+        workers=args.workers,
     )
 
     if args.history:

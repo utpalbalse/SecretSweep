@@ -92,3 +92,34 @@ def test_should_skip_dir_default_dirs():
 def test_should_skip_dir_egg_info_pattern():
     assert _should_skip_dir('secretsweep.egg-info') is True
     assert _should_skip_dir('mypackage.dist-info') is True
+
+
+def test_parallel_scan_finds_all_secrets():
+    root = _make_project({
+        'a.py': 'KEY=AKIAIOSFODNN7EXAMPLE1234',
+        'b.py': 'TOKEN=ghp_aBcDeFgHiJkLmNoPqRsTuVwXyZ1234567890',
+        'c.py': 'nothing sensitive here',
+    })
+    findings = scan_directory(root)
+    names = {f['name'] for f in findings}
+    assert 'AWS Access Key' in names
+    assert 'GitHub Token' in names
+
+
+def test_parallel_scan_explicit_workers():
+    root = _make_project({
+        'a.py': 'KEY=AKIAIOSFODNN7EXAMPLE1234',
+        'b.py': 'KEY=AKIAIOSFODNN7EXAMPLE1234',
+    })
+    findings = scan_directory(root, workers=2)
+    assert len(findings) >= 1
+
+
+def test_parallel_scan_single_worker_matches_default():
+    root = _make_project({
+        'a.py': 'KEY=AKIAIOSFODNN7EXAMPLE1234',
+        'b.py': 'normal text',
+    })
+    default_findings = scan_directory(root)
+    single_findings = scan_directory(root, workers=1)
+    assert {f['name'] for f in default_findings} == {f['name'] for f in single_findings}

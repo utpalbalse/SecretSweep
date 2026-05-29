@@ -1,5 +1,8 @@
 import fnmatch
 import os
+from concurrent.futures import ThreadPoolExecutor
+from functools import partial
+
 import regex
 from secretsweep.detectors.patterns import PATTERNS
 
@@ -65,6 +68,33 @@ def scan_file(filepath, entropy=False, config=None):
     return findings
 
 
+def _scan_single_file(filepath, *, entropy, path_scan, archives, k8s, tf_state, config):
+    results = []
+    filename = os.path.basename(filepath)
+    _, ext = os.path.splitext(filename.lower())
+
+    if path_scan:
+        from secretsweep.core.path_scanner import scan_path
+        results.extend(scan_path(filepath))
+
+    if archives and ext in _ARCHIVE_EXTS:
+        from secretsweep.core.archive_scanner import scan_archive
+        results.extend(scan_archive(filepath))
+        return results
+
+    if k8s and ext in _YAML_EXTS:
+        from secretsweep.core.k8s_scanner import scan_kubernetes_secret
+        results.extend(scan_kubernetes_secret(filepath))
+
+    if tf_state and filename.endswith('.tfstate'):
+        from secretsweep.core.tf_scanner import scan_terraform_state
+        results.extend(scan_terraform_state(filepath))
+        return results
+
+    results.extend(scan_file(filepath, entropy=entropy, config=config))
+    return results
+
+
 def scan_directory(
     path,
     ignorer=None,
@@ -74,42 +104,38 @@ def scan_directory(
     k8s=False,
     tf_state=False,
     config=None,
+    workers=None,
 ):
-    all_findings = []
-
+    # Phase 1: collect file paths sequentially — dir filtering must be sequential
+    filepaths = []
     for root, dirs, files in os.walk(path):
         dirs[:] = [
             d for d in dirs
             if not _should_skip_dir(d)
             and (not ignorer or not ignorer.is_ignored(os.path.join(root, d)))
         ]
-
         for filename in files:
             filepath = os.path.join(root, filename)
+            if not ignorer or not ignorer.is_ignored(filepath):
+                filepaths.append(filepath)
 
-            if ignorer and ignorer.is_ignored(filepath):
-                continue
+    if not filepaths:
+        return []
 
-            if path_scan:
-                from secretsweep.core.path_scanner import scan_path
-                all_findings.extend(scan_path(filepath))
+    # Phase 2: scan files in parallel
+    scan_fn = partial(
+        _scan_single_file,
+        entropy=entropy,
+        path_scan=path_scan,
+        archives=archives,
+        k8s=k8s,
+        tf_state=tf_state,
+        config=config,
+    )
 
-            _, ext = os.path.splitext(filename.lower())
-
-            if archives and ext in _ARCHIVE_EXTS:
-                from secretsweep.core.archive_scanner import scan_archive
-                all_findings.extend(scan_archive(filepath))
-                continue
-
-            if k8s and ext in _YAML_EXTS:
-                from secretsweep.core.k8s_scanner import scan_kubernetes_secret
-                all_findings.extend(scan_kubernetes_secret(filepath))
-
-            if tf_state and filename.endswith('.tfstate'):
-                from secretsweep.core.tf_scanner import scan_terraform_state
-                all_findings.extend(scan_terraform_state(filepath))
-                continue
-
-            all_findings.extend(scan_file(filepath, entropy=entropy, config=config))
+    all_findings = []
+    with ThreadPoolExecutor(max_workers=workers) as executor:
+        for results in executor.map(scan_fn, filepaths):
+            all_findings.extend(results)
 
     return all_findings
