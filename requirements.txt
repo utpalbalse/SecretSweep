@@ -7,5 +7,8 @@ gitpython>=3.1.40
 # YAML parsing for config files and Kubernetes secret scanning
 pyyaml>=6.0
 
+# Rich terminal output
+rich>=13.0.0
+
 # Testing framework
 pytest>=8.0.0

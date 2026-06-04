@@ -1,53 +1,67 @@
+from rich import box
+from rich.columns import Columns
+from rich.console import Console
+from rich.table import Table
+from rich.text import Text
+
+console = Console()
+
+_SEV_STYLE = {
+    'critical': 'bold red',
+    'high':     'bold yellow',
+    'medium':   'bold cyan',
+    'low':      'bold green',
+}
+
+
+def _sev(severity):
+    return Text(severity.upper(), style=_SEV_STYLE.get(severity.lower(), 'white'))
+
+
+def _location(finding):
+    source = finding.get('source', 'file')
+    if source == 'git_history':
+        return f"commit {finding.get('commit', '')}"
+    if source == 'k8s_secret':
+        return f"key: {finding.get('k8s_key', '')}"
+    if source == 'terraform_state':
+        ctx = finding.get('tf_context', '')
+        return ctx[:40] + ('…' if len(ctx) > 40 else '')
+    if source == 'path':
+        return '—'
+    if finding.get('line'):
+        return f"line {finding['line']}"
+    return '—'
+
+
 def print_findings(findings):
     if not findings:
-        print("No secrets found.")
+        console.print("\n[bold green]✓ No secrets found.[/bold green]\n")
         return
 
-    print(f"\nFound {len(findings)} potential secret(s):\n")
+    console.print(f"\n[bold]Found [red]{len(findings)}[/red] potential secret(s)[/bold]\n")
 
-    for finding in findings:
-        source = finding.get("source", "file")
-        sev = f"[{finding['severity'].upper()}]"
+    table = Table(box=box.ROUNDED, show_header=True, header_style="bold white", expand=True)
+    table.add_column("Severity",  no_wrap=True, min_width=10)
+    table.add_column("Type",      style="bold white")
+    table.add_column("Category",  style="dim", no_wrap=True)
+    table.add_column("File",      style="dim")
+    table.add_column("Location",  justify="right", no_wrap=True)
 
-        if source == "git_history":
-            print(f"  {sev} {finding['name']}  (git history)")
-            print(f"  File   : {finding['file']}")
-            print(f"  Commit : {finding['commit']}")
-            print(f"  Message: {finding['message']}")
-            print(f"  Author : {finding['author']}")
-        elif source == "path":
-            print(f"  {sev} {finding['name']}")
-            print(f"  File   : {finding['file']}")
-            print(f"  Reason : {finding.get('reason', '')}")
-        elif source == "entropy":
-            print(f"  {sev} {finding['name']}")
-            print(f"  File   : {finding['file']}")
-            print(f"  Line   : {finding['line']}")
-            print(f"  Value  : {finding.get('matched', '')}")
-        elif source == "k8s_secret":
-            print(f"  {sev} {finding['name']}  (kubernetes secret)")
-            print(f"  File   : {finding['file']}")
-            print(f"  Key    : {finding.get('k8s_key', '')}")
-        elif source == "terraform_state":
-            print(f"  {sev} {finding['name']}  (terraform state)")
-            print(f"  File   : {finding['file']}")
-            print(f"  Field  : {finding.get('tf_context', '')}")
-        else:
-            print(f"  {sev} {finding['name']}")
-            print(f"  File   : {finding['file']}")
-            if finding.get('line'):
-                print(f"  Line   : {finding['line']}")
+    for f in findings:
+        table.add_row(
+            _sev(f.get('severity', 'unknown')),
+            f.get('name', ''),
+            f.get('category', ''),
+            f.get('file', ''),
+            _location(f),
+        )
 
-        print()
-
+    console.print(table)
     _print_summary(findings)
 
 
 def _print_summary(findings):
-    print("─" * 52)
-    print("  Summary")
-    print("─" * 52)
-
     sev_counts = {}
     cat_counts = {}
     for f in findings:
@@ -56,12 +70,17 @@ def _print_summary(findings):
         sev_counts[s] = sev_counts.get(s, 0) + 1
         cat_counts[c] = cat_counts.get(c, 0) + 1
 
-    print("  By severity:")
+    sev_table = Table(box=box.SIMPLE, show_header=True, header_style="bold")
+    sev_table.add_column("Severity")
+    sev_table.add_column("Count", justify="right")
     for s in ['critical', 'high', 'medium', 'low']:
         if s in sev_counts:
-            print(f"    {s.upper():<12} {sev_counts[s]}")
+            sev_table.add_row(Text(s.upper(), style=_SEV_STYLE[s]), str(sev_counts[s]))
 
-    print("  By category:")
-    for c, count in sorted(cat_counts.items()):
-        print(f"    {c:<15} {count}")
-    print()
+    cat_table = Table(box=box.SIMPLE, show_header=True, header_style="bold")
+    cat_table.add_column("Category")
+    cat_table.add_column("Count", justify="right")
+    for c, n in sorted(cat_counts.items()):
+        cat_table.add_row(c, str(n))
+
+    console.print(Columns([sev_table, cat_table], padding=(0, 4)))
