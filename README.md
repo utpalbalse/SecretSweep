@@ -1,8 +1,8 @@
 # SecretSweep
 
-**A static-analysis secret scanner for codebases, git history, Kubernetes manifests, and Terraform state.**
+Scans codebases for accidentally committed secrets — API keys, credentials, private keys, and tokens — across files, git history, Kubernetes manifests, and Terraform state.
 
-Detects 36 credential types across 6 categories. Ships with entropy-based detection, parallel scanning, and SARIF output for security pipeline integration.
+36 pattern types. Entropy-based detection for secrets with no fixed format. Outputs SARIF for GitHub Code Scanning.
 
 ![Python](https://img.shields.io/badge/python-3.9%2B-blue)
 ![Tests](https://img.shields.io/badge/tests-98%20passing-brightgreen)
@@ -14,12 +14,12 @@ Detects 36 credential types across 6 categories. Ships with entropy-based detect
 
 | Category | Patterns |
 |---|---|
-| ☁️ Cloud | AWS Access Key, AWS Secret Key, AWS STS Token, GCP Service Account, Azure Connection String, Azure SAS Token, Cloudflare API Token, Google API Key |
-| 🔐 Crypto | Private Key (RSA/DSA/EC/OpenSSH), PGP Private Key |
-| 🗄️ Database | Database URL (PostgreSQL, MySQL, MongoDB, Redis) |
-| 🔌 API | OpenAI, HuggingFace, Twilio, SendGrid, Stripe, Shopify, Discord, Datadog, Sentry, Slack, Facebook, Bearer Token, Generic API Key, JWT |
-| ⚙️ CI/CD | GitHub Token, GitLab PAT, NPM Auth Token, Vault Token, Terraform Cloud Token, Dockerfile Secret, CI/CD Hardcoded Secret |
-| 🗂️ Config | Hardcoded Password |
+| Cloud | AWS Access Key, AWS Secret Key, AWS STS Token, GCP Service Account, Azure Connection String, Azure SAS Token, Cloudflare API Token, Google API Key |
+| Crypto | Private Key (RSA/DSA/EC/OpenSSH), PGP Private Key |
+| Database | Database URL (PostgreSQL, MySQL, MongoDB, Redis) |
+| API | OpenAI, HuggingFace, Twilio, SendGrid, Stripe, Shopify, Discord, Datadog, Sentry, Slack, Facebook, Bearer Token, Generic API Key, JWT |
+| CI/CD | GitHub Token, GitLab PAT, NPM Auth Token, Vault Token, Terraform Cloud Token, Dockerfile Secret, CI/CD Hardcoded Secret |
+| Config | Hardcoded Password |
 
 Plus **entropy-based detection** using Shannon entropy for high-randomness strings with no known prefix — catches secrets that don't match any fixed format.
 
@@ -49,12 +49,12 @@ secretsweep ./my-repo --workers 8       # parallel scan with 8 threads
 secretsweep . --json --output findings.json
 ```
 
-**SARIF** — compatible with GitHub Code Scanning and any SARIF-aware security tooling.
+**SARIF**
 ```bash
 secretsweep . --sarif --output findings.sarif
 ```
 
-Exit codes: `0` (clean), `1` (findings present), `2` (critical findings) — designed to gate CI pipelines.
+Exit codes: `0` (clean), `1` (findings present), `2` (critical findings).
 
 ---
 
