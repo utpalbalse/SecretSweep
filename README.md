@@ -1,27 +1,121 @@
 # SecretSweep
 
-A continuous secret scanner that detects exposed credentials, API keys, tokens,
-and other sensitive data across codebases, git histories, config files,
-CI/CD pipelines, containers, Kubernetes manifests, IaC files, and cloud surfaces.
+**A static-analysis secret scanner for codebases, git history, Kubernetes manifests, and Terraform state.**
+
+Detects 36 credential types across 6 categories. Ships with entropy-based detection, parallel scanning, and SARIF output for security pipeline integration.
+
+![Python](https://img.shields.io/badge/python-3.9%2B-blue)
+![Tests](https://img.shields.io/badge/tests-98%20passing-brightgreen)
+![License](https://img.shields.io/badge/license-MIT-green)
+
+---
 
 ## What It Detects
-- API keys and access tokens
-- SSH private keys
-- Database connection strings and credentials
-- JWT tokens
-- Hardcoded passwords
-- .env and config file secrets
-- Cloud credentials (AWS, GCP, Azure)
-- Git history secrets
 
-## Scan Targets (Planned)
-- Local codebases and file systems
-- Git commit history
-- CI/CD pipeline configs (GitHub Actions, GitLab CI, Jenkins)
-- Docker and container images
-- Kubernetes manifests
-- IaC files (Terraform, CloudFormation, Ansible)
-- Cloud provider surfaces
+| Category | Patterns |
+|---|---|
+| ☁️ Cloud | AWS Access Key, AWS Secret Key, AWS STS Token, GCP Service Account, Azure Connection String, Azure SAS Token, Cloudflare API Token, Google API Key |
+| 🔐 Crypto | Private Key (RSA/DSA/EC/OpenSSH), PGP Private Key |
+| 🗄️ Database | Database URL (PostgreSQL, MySQL, MongoDB, Redis) |
+| 🔌 API | OpenAI, HuggingFace, Twilio, SendGrid, Stripe, Shopify, Discord, Datadog, Sentry, Slack, Facebook, Bearer Token, Generic API Key, JWT |
+| ⚙️ CI/CD | GitHub Token, GitLab PAT, NPM Auth Token, Vault Token, Terraform Cloud Token, Dockerfile Secret, CI/CD Hardcoded Secret |
+| 🗂️ Config | Hardcoded Password |
 
-## Status
-🚧 Under active development
+Plus **entropy-based detection** using Shannon entropy for high-randomness strings with no known prefix — catches secrets that don't match any fixed format.
+
+---
+
+## Scan Surfaces
+
+```bash
+secretsweep ./my-repo                   # scan all files
+secretsweep ./my-repo --history         # scan full git commit history
+secretsweep ./my-repo --entropy         # add entropy-based detection
+secretsweep ./my-repo --paths           # flag sensitive filenames (.env, id_rsa, *.pem)
+secretsweep ./my-repo --k8s             # decode & scan Kubernetes Secret YAML files
+secretsweep ./my-repo --tf-state        # scan Terraform .tfstate files
+secretsweep ./my-repo --archives        # scan inside .zip and .tar archives
+secretsweep ./my-repo --workers 8       # parallel scan with 8 threads
+```
+
+---
+
+## Output Formats
+
+**Console (default)** — color-coded findings table with severity badges and a category breakdown summary.
+
+**JSON**
+```bash
+secretsweep . --json --output findings.json
+```
+
+**SARIF** — compatible with GitHub Code Scanning and any SARIF-aware security tooling.
+```bash
+secretsweep . --sarif --output findings.sarif
+```
+
+Exit codes: `0` (clean), `1` (findings present), `2` (critical findings) — designed to gate CI pipelines.
+
+---
+
+## Baseline Suppression
+
+Suppress known findings so future scans only surface *new* secrets:
+
+```bash
+# capture current state
+secretsweep . --write-baseline baseline.json
+
+# subsequent runs only report new findings
+secretsweep . --baseline baseline.json
+```
+
+---
+
+## Config File
+
+Place `.secretsweep.yaml` at the repo root:
+
+```yaml
+entropy_threshold: 4.5
+entropy_min_length: 20
+ignore_paths:
+  - tests/
+  - docs/
+custom_patterns:
+  - name: "Internal API Key"
+    pattern: 'corp_[a-zA-Z0-9]{32}'
+    severity: critical
+    category: api
+```
+
+---
+
+## Ignore File
+
+Place `.secretsweepignore` at the repo root — supports glob patterns:
+
+```
+tests/fixtures/
+*.example
+docs/
+```
+
+---
+
+## Install
+
+```bash
+git clone https://github.com/utpalbalse/SecretSweep.git
+cd SecretSweep
+pip install -e .
+secretsweep --help
+```
+
+---
+
+## Tests
+
+```bash
+pytest   # 98 tests across 12 modules
+```
