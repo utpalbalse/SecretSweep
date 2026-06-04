@@ -49,7 +49,7 @@ def main():
 
     ignorer = Ignorer(os.path.join(args.path, '.secretsweepignore'))
 
-    print(f"Scanning {args.path} ...", file=sys.stderr)
+    show_progress = not args.json_output and not args.sarif
     findings = scan_directory(
         args.path,
         ignorer=ignorer,
@@ -60,11 +60,11 @@ def main():
         tf_state=args.tf_state,
         config=config,
         workers=args.workers,
+        show_progress=show_progress,
     )
 
     if args.history:
-        print(f"Scanning git history in {args.path} ...", file=sys.stderr)
-        findings += scan_git_history(args.path, depth=args.depth)
+        findings += scan_git_history(args.path, depth=args.depth, show_progress=show_progress)
 
     findings = deduplicate(findings)
 

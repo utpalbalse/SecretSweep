@@ -105,6 +105,7 @@ def scan_directory(
     tf_state=False,
     config=None,
     workers=None,
+    show_progress=False,
 ):
     # Phase 1: collect file paths sequentially — dir filtering must be sequential
     filepaths = []
@@ -134,8 +135,26 @@ def scan_directory(
     )
 
     all_findings = []
-    with ThreadPoolExecutor(max_workers=workers) as executor:
-        for results in executor.map(scan_fn, filepaths):
-            all_findings.extend(results)
+    if show_progress:
+        from rich.progress import (
+            BarColumn, MofNCompleteColumn, Progress,
+            SpinnerColumn, TextColumn, TimeElapsedColumn,
+        )
+        with Progress(
+            SpinnerColumn(),
+            TextColumn("[bold cyan]{task.fields[filename]}[/bold cyan]"),
+            BarColumn(),
+            MofNCompleteColumn(),
+            TimeElapsedColumn(),
+        ) as progress:
+            task = progress.add_task("", total=len(filepaths), filename="scanning…")
+            with ThreadPoolExecutor(max_workers=workers) as executor:
+                for filepath, results in zip(filepaths, executor.map(scan_fn, filepaths)):
+                    all_findings.extend(results)
+                    progress.update(task, advance=1, filename=os.path.basename(filepath))
+    else:
+        with ThreadPoolExecutor(max_workers=workers) as executor:
+            for results in executor.map(scan_fn, filepaths):
+                all_findings.extend(results)
 
     return all_findings

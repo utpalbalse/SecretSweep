@@ -3,7 +3,7 @@ import regex
 from secretsweep.detectors.patterns import PATTERNS
 
 
-def scan_git_history(repo_path, depth=None):
+def scan_git_history(repo_path, depth=None, show_progress=False):
     repo = git.Repo(repo_path, search_parent_directories=True)
     all_findings = []
 
@@ -11,7 +11,32 @@ def scan_git_history(repo_path, depth=None):
     if depth is not None:
         commits = commits[:depth]
 
-    for commit in commits:
+    if show_progress:
+        from rich.progress import (
+            BarColumn, MofNCompleteColumn, Progress,
+            SpinnerColumn, TextColumn, TimeElapsedColumn,
+        )
+        progress_ctx = Progress(
+            SpinnerColumn(),
+            TextColumn("[bold cyan]{task.fields[sha]}[/bold cyan]"),
+            BarColumn(),
+            MofNCompleteColumn(),
+            TimeElapsedColumn(),
+        )
+    else:
+        progress_ctx = None
+
+    def _iter(commits, progress_ctx):
+        if progress_ctx:
+            with progress_ctx as progress:
+                task = progress.add_task("", total=len(commits), sha="scanning…")
+                for commit in commits:
+                    progress.update(task, advance=1, sha=commit.hexsha[:8])
+                    yield commit
+        else:
+            yield from commits
+
+    for commit in _iter(commits, progress_ctx):
         if commit.parents:
             diffs = commit.parents[0].diff(commit, create_patch=True)
         else:
