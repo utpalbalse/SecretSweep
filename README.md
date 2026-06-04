@@ -1,8 +1,10 @@
 # SecretSweep
 
-Scans codebases for accidentally committed secrets — API keys, credentials, private keys, and tokens — across files, git history, Kubernetes manifests, and Terraform state.
+SecretSweep is a command-line secret scanner that finds accidentally committed credentials in source code. It covers the full surface area of a typical repo: source files, git commit history, Kubernetes Secret manifests, Terraform state files, and compressed archives.
 
-36 pattern types. Entropy-based detection for secrets with no fixed format. Outputs SARIF for GitHub Code Scanning.
+Detection works in two layers. The first layer matches 36 known credential formats using regex patterns covering cloud providers, databases, CI/CD tokens, and popular APIs. The second layer uses Shannon entropy to flag high-randomness strings that don't match any known pattern, catching secrets with custom or proprietary formats.
+
+Output options include a color-coded terminal table, JSON, and SARIF. The SARIF output can be uploaded directly to GitHub Code Scanning. Exit codes (0/1/2) are designed to integrate with CI pipelines.
 
 ![Python](https://img.shields.io/badge/python-3.9%2B-blue)
 ![Tests](https://img.shields.io/badge/tests-98%20passing-brightgreen)
@@ -21,7 +23,7 @@ Scans codebases for accidentally committed secrets — API keys, credentials, pr
 | CI/CD | GitHub Token, GitLab PAT, NPM Auth Token, Vault Token, Terraform Cloud Token, Dockerfile Secret, CI/CD Hardcoded Secret |
 | Config | Hardcoded Password |
 
-Plus **entropy-based detection** using Shannon entropy for high-randomness strings with no known prefix — catches secrets that don't match any fixed format.
+Plus **entropy-based detection** using Shannon entropy for high-randomness strings with no known prefix, catching secrets that don't match any fixed format.
 
 ---
 
@@ -42,7 +44,7 @@ secretsweep ./my-repo --workers 8       # parallel scan with 8 threads
 
 ## Output Formats
 
-**Console (default)** — color-coded findings table with severity badges and a category breakdown summary.
+**Console (default)** — color-coded findings table with severity badges and a category breakdown summary
 
 **JSON**
 ```bash
@@ -93,7 +95,7 @@ custom_patterns:
 
 ## Ignore File
 
-Place `.secretsweepignore` at the repo root — supports glob patterns:
+Place `.secretsweepignore` at the repo root. Supports glob patterns:
 
 ```
 tests/fixtures/
