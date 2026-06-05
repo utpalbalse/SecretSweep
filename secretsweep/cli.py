@@ -4,6 +4,7 @@ import sys
 
 from secretsweep.core.scanner import scan_directory
 from secretsweep.core.git_scanner import scan_git_history
+from secretsweep.core.cicd_scanner import scan_cicd_directory
 from secretsweep.core.ignorer import Ignorer
 from secretsweep.core.config import load_config
 from secretsweep.core.baseline import filter_new_findings, write_baseline
@@ -27,6 +28,8 @@ def main():
     scan_group.add_argument("--archives", action="store_true", help="Scan inside .zip and .tar archives")
     scan_group.add_argument("--k8s", action="store_true", help="Decode and scan Kubernetes Secret YAML files")
     scan_group.add_argument("--tf-state", action="store_true", dest="tf_state", help="Scan Terraform state files")
+    scan_group.add_argument("--notebooks", action="store_true", help="Scan Jupyter notebooks including output cells")
+    scan_group.add_argument("--cicd", action="store_true", help="Scan CI/CD pipeline configs (GitHub Actions, GitLab CI, CircleCI, Bitbucket)")
     scan_group.add_argument("--workers", type=int, default=None, help="Number of parallel worker threads (default: auto)")
 
     output_group = parser.add_argument_group("output options")
@@ -58,6 +61,7 @@ def main():
         archives=args.archives,
         k8s=args.k8s,
         tf_state=args.tf_state,
+        notebooks=args.notebooks,
         config=config,
         workers=args.workers,
         show_progress=show_progress,
@@ -65,6 +69,9 @@ def main():
 
     if args.history:
         findings += scan_git_history(args.path, depth=args.depth, show_progress=show_progress)
+
+    if args.cicd:
+        findings += scan_cicd_directory(args.path)
 
     findings = deduplicate(findings)
 

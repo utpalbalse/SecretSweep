@@ -68,7 +68,7 @@ def scan_file(filepath, entropy=False, config=None):
     return findings
 
 
-def _scan_single_file(filepath, *, entropy, path_scan, archives, k8s, tf_state, config):
+def _scan_single_file(filepath, *, entropy, path_scan, archives, k8s, tf_state, notebooks, config):
     results = []
     filename = os.path.basename(filepath)
     _, ext = os.path.splitext(filename.lower())
@@ -91,6 +91,11 @@ def _scan_single_file(filepath, *, entropy, path_scan, archives, k8s, tf_state, 
         results.extend(scan_terraform_state(filepath))
         return results
 
+    if notebooks and ext == '.ipynb':
+        from secretsweep.core.notebook_scanner import scan_notebook
+        results.extend(scan_notebook(filepath))
+        return results
+
     results.extend(scan_file(filepath, entropy=entropy, config=config))
     return results
 
@@ -103,6 +108,7 @@ def scan_directory(
     archives=False,
     k8s=False,
     tf_state=False,
+    notebooks=False,
     config=None,
     workers=None,
     show_progress=False,
@@ -131,6 +137,7 @@ def scan_directory(
         archives=archives,
         k8s=k8s,
         tf_state=tf_state,
+        notebooks=notebooks,
         config=config,
     )
 

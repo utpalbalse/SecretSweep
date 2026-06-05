@@ -27,6 +27,11 @@ def _location(finding):
     if source == 'terraform_state':
         ctx = finding.get('tf_context', '')
         return ctx[:40] + ('…' if len(ctx) > 40 else '')
+    if source == 'notebook':
+        return f"cell {finding.get('cell_index', '?')}"
+    if source == 'cicd':
+        key = finding.get('cicd_key', '')
+        return f"key: {key}" if key else '—'
     if source == 'path':
         return '—'
     if finding.get('line'):
