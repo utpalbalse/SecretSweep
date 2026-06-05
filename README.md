@@ -6,6 +6,8 @@ Detection works in two layers. The first layer matches 36 known credential forma
 
 Output options include a color-coded terminal table, JSON, and SARIF. The SARIF output can be uploaded directly to GitHub Code Scanning. Exit codes (0/1/2) are designed to integrate with CI pipelines.
 
+![demo](demo_run.gif)
+
 ![Python](https://img.shields.io/badge/python-3.9%2B-blue)
 ![Tests](https://img.shields.io/badge/tests-113%20passing-brightgreen)
 ![License](https://img.shields.io/badge/license-MIT-green)
