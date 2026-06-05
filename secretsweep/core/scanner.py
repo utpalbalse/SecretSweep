@@ -113,7 +113,7 @@ def scan_directory(
     workers=None,
     show_progress=False,
 ):
-    # Phase 1: collect file paths sequentially — dir filtering must be sequential
+    # collect file paths
     filepaths = []
     for root, dirs, files in os.walk(path):
         dirs[:] = [
