@@ -1,13 +1,13 @@
 # SecretSweep
 
-SecretSweep is a command-line secret scanner that finds accidentally committed credentials in source code. It covers the full surface area of a typical repo: source files, git commit history, Kubernetes Secret manifests, Terraform state files, and compressed archives.
+SecretSweep is a command-line secret scanner that finds accidentally committed credentials in source code. It covers the full surface area of a typical repo: source files, git commit history, Kubernetes Secret manifests, Terraform state files, compressed archives, Jupyter notebooks, and CI/CD pipeline configs.
 
 Detection works in two layers. The first layer matches 36 known credential formats using regex patterns covering cloud providers, databases, CI/CD tokens, and popular APIs. The second layer uses Shannon entropy to flag high-randomness strings that don't match any known pattern, catching secrets with custom or proprietary formats.
 
 Output options include a color-coded terminal table, JSON, and SARIF. The SARIF output can be uploaded directly to GitHub Code Scanning. Exit codes (0/1/2) are designed to integrate with CI pipelines.
 
 ![Python](https://img.shields.io/badge/python-3.9%2B-blue)
-![Tests](https://img.shields.io/badge/tests-98%20passing-brightgreen)
+![Tests](https://img.shields.io/badge/tests-113%20passing-brightgreen)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
 ---
@@ -37,6 +37,8 @@ secretsweep ./my-repo --paths           # flag sensitive filenames (.env, id_rsa
 secretsweep ./my-repo --k8s             # decode & scan Kubernetes Secret YAML files
 secretsweep ./my-repo --tf-state        # scan Terraform .tfstate files
 secretsweep ./my-repo --archives        # scan inside .zip and .tar archives
+secretsweep ./my-repo --notebooks       # scan Jupyter notebooks including output cells
+secretsweep ./my-repo --cicd            # scan GitHub Actions, GitLab CI, CircleCI, Bitbucket configs
 secretsweep ./my-repo --workers 8       # parallel scan with 8 threads
 ```
 
@@ -119,5 +121,5 @@ secretsweep --help
 ## Tests
 
 ```bash
-pytest   # 98 tests across 12 modules
+pytest   # 113 tests across 14 modules
 ```
